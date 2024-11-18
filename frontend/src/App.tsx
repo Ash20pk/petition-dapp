@@ -57,7 +57,7 @@ const formatDeadline = (deadline: number) => {
   } else if (hours > 0) {
     return `${hours}h remaining`;
   } else {
-    return 'Ending soon';
+    return 'Ending soon..';
   }
 };
 
@@ -66,7 +66,6 @@ export default function App() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [newCampaignDeadline, setNewCampaignDeadline] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showManageModal, setShowManageModal] = useState(false);
   const [activeEditMenu, setActiveEditMenu] = useState<number | null>(null);
   const { connect, isConnecting } = useConnectUI();
@@ -83,14 +82,13 @@ export default function App() {
     await disconnect();
     setContract(undefined);
     setCampaigns([]);
-    setError(null);
   };
 
   const handleConnect = async () => {
     try {
       await connect();
     } catch (err) {
-      setError("Failed to connect wallet");
+      toast.error("Failed to connect wallet");
     }
   };
 
@@ -132,7 +130,6 @@ export default function App() {
       toast.dismiss(loadingToast);
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
     }
   };
 
@@ -141,6 +138,7 @@ export default function App() {
     
     const loadingToast = toast.loading("Creating campaign...");
     try {
+      setLoading(true);
       const deadline = Math.floor(new Date(newCampaignDeadline).getTime() / 1000);
       await contract.functions.create_campaign(bn(deadline)).call();
       setNewCampaignDeadline("");
@@ -150,9 +148,10 @@ export default function App() {
     } catch (error: any) {
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
+      setLoading(false);
     } finally {
       toast.dismiss(loadingToast);
+      setLoading(false);
     }
   };
 
@@ -161,15 +160,17 @@ export default function App() {
     
     const loadingToast = toast.loading("Signing petition...");
     try {
+      setLoading(true);
       await contract.functions.sign_petition(bn(id)).call();
       await loadCampaigns(contract);
       toast.success("Petition signed successfully!");
     } catch (error: any) {
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
+      setLoading(false);
     } finally {
       toast.dismiss(loadingToast);
+      setLoading(false);
     }
   };
 
@@ -178,15 +179,17 @@ export default function App() {
     
     const loadingToast = toast.loading("Unsigning petition...");
     try {
+      setLoading(true);
       await contract.functions.unsign_petition(bn(id)).call();
       await loadCampaigns(contract);
       toast.success("Petition unsigned successfully!");
     } catch (error: any) {
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
+      setLoading(false);
     } finally {
       toast.dismiss(loadingToast);
+      setLoading(false);
     }
   };
 
@@ -195,6 +198,7 @@ export default function App() {
     
     const loadingToast = toast.loading("Cancelling campaign...");
     try {
+      setLoading(true);
       await contract.functions.cancel_campaign(bn(id)).call();
       await loadCampaigns(contract);
       toast.success("Campaign cancelled successfully!");
@@ -202,9 +206,10 @@ export default function App() {
     } catch (error: any) {
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
+      setLoading(false);
     } finally {
       toast.dismiss(loadingToast);
+      setLoading(false);
     }
   };
 
@@ -213,6 +218,7 @@ export default function App() {
     
     const loadingToast = toast.loading("Ending campaign...");
     try {
+      setLoading(true);
       await contract.functions.end_campaign(bn(id)).call();
       await loadCampaigns(contract);
       toast.success("Campaign ended successfully!");
@@ -220,9 +226,10 @@ export default function App() {
     } catch (error: any) {
       const message = getErrorMessage(error);
       toast.error(message);
-      setError(message);
+      setLoading(false);
     } finally {
       toast.dismiss(loadingToast);
+      setLoading(false);
     }
   };
 
